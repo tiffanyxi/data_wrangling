@@ -11,18 +11,19 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
 absolute path
-relative path better-stable
-
+relative path better-stable(move your folder/email to others, abs path fails)
 
 ## Import FAS csv files
 
-import my first csv
+import my first csv(comma separated value)
+
 r package::function inside the package
-if two package have same function---conflict
+if two package have same function---conflict with each other
 
 ```{r}
 litters_data = read_csv(file = "./data/FAS_litters.csv")
 litters_data = janitor::clean_names(litters_data)
+#clean up variable names--convert column names to lower snake case
 ```
 
 Import the pups data also
@@ -43,18 +44,18 @@ look at litters data
 ```{r}
 litters_data
 
-head(litters_data)
+head(litters_data)#first rows
 tail(litters_data, 5)
 
 skimr::skim(litters_data)
+str(litters_data)
 
 #View(litters_data)
-#all of the data//cannot knit
-
+#pull out the entire dataset// knit error
 
 ```
 
-Skip some rows
+Skip some rows;omit variable names
 
 ```{r}
 litters_data = read_csv(file = "./data/FAS_litters.csv", skip = 10, col_names = FALSE)
@@ -83,11 +84,10 @@ head(litters_data)
 
 ```
 
+Tabbed autocompletion
 
 ```{r}
-pups_data = read_csv(file = "./data/FAS_pups.csv",
-                     col_types = "ciiiii"
-                     )
+pups_data = read_csv("./data/FAS_pups.csv", col_types = "ciiiii")
 pups_data = janitor::clean_names(pups_data)
 skimr::skim(pups_data)
 ```
@@ -95,7 +95,7 @@ skimr::skim(pups_data)
 
 ##Other formats
 
-Read in mlb data
+Read in Excel(mlb data)
 
 ```{r}
 mlb_data = readxl::read_excel(path = "./data/mlb11.xlsx", n_max = 20)
@@ -105,9 +105,8 @@ mlb_subset = readxl::read_excel(path = "./data/mlb11.xlsx", range = "A1:E17")
 tail(mlb_subset)
 ```
 
-Read in the pulse data
+Read in SAS dataset(pulse data)
 
-SAS dataset
 ```{r}
 pulse_data = haven::read_sas("./data/public_pulse_data.sas7bdat")
 pulse_data
@@ -116,9 +115,13 @@ pulse_data
 ##Compare with base R
 
 ```{r}
-pups_base = read.csv("./data/FAS_pups.csv")
+pups_baser = read.csv("./data/FAS_pups.csv")
 pups_readr = read_csv("./data/FAS_pups.csv")
-pups_base$S
+
+pups_baser
+pups_readr
+
+pups_baser$S #you can just type the first letter
 pups_readr$S #error
 ```
 
