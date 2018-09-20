@@ -10,8 +10,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 ```
-absolute path
-relative path better-stable(move your folder/email to others, abs path fails)
 
 ## Import FAS csv files
 
@@ -27,4 +25,209 @@ pups_data = read_csv("./data/FAS_pups.csv",
 pups_data = janitor::clean_names(pups_data)
 
 ```
+
+##Select variables
+
+select 选择的是列，得到的还是data frame, get these observation
+fliter选择的是行，得到的还是data frame
+
+```{r}
+select(litters_data, group, litter_number, gd0_weight)
+
+select(litters_data, litter_number, gd0_weight, pups_born_alive)
+
+```
+
+...by specifying a range
+
+```{r}
+select(litters_data, gd_of_birth:pups_survive)
+select(litters_data, group, gd_of_birth:pups_survive)
+```
+
+... by saying what you want to remove
+
+```{r}
+select(litters_data, -pups_survive)
+```
+
+...select and rename
+```{r}
+select(litters_data, group, gest_day_0_weight = gd0_weight)
+
+rename(litters_data, GROUP = group, LiTtEr_NuMbEr = litter_number)#give back full dataset
+?select_helpers
+```
+
+...use select helper
+starts_with(), end_with(), contains()
+```{r}
+select(litters_data, starts_with("gd"))
+
+select(litters_data, litter_number, starts_with("pup"))
+
+select(litters_data, litter_number, group, everything())#give back rest of everything
+#reorganizing columns without discarding anything
+```
+
+...pull: want the vector stored in the column--pull a single variable
+
+```{r}
+pull(litters_data, gd_of_birth)
+```
+
+...try pups dataset
+
+```{r}
+pups_data
+select(pups_data, litter_number, sex, pd_ears)
+```
+
+##Filter observations
+
+eliminate some rows in the dataset
+
+filter rows/select column
+
+```{r}
+filter(litters_data, gd0_weight > 25)
+filter(litters_data, gd0_weight <= 25)
+
+filter(litters_data, pups_born_alive == 8)
+filter(litters_data, is.na(gd0_weight))
+filter(litters_data, !is.na(gd0_weight))#除去所有na
+
+filter(litters_data, group == "Low7" | group == "Low8")
+filter(litters_data, group %in% c("Low7","Low8"))
+
+filter(litters_data, pups_born_alive %in% 4:7)
+filter(litters_data, pups_born_alive %in% 4:7, !is.na(gd0_weight))
+#, is &
+```
+
+Learning Assessment -- the pups data
+
+```{r}
+pups_data
+filter(pups_data, sex == 1)
+filter(pups_data, sex == 2, pd_walk < 11)
+```
+
+##Mutate
+
+Create variables
+add new variable--"wt_gain" and overwrite old variable (to lower cases)
+
+```{r}
+mutate(litters_data,
+  wt_gain = gd18_weight - gd0_weight,
+  group = tolower(group)
+)
+
+mutate(litters_data,
+  wt_gain = gd18_weight - gd0_weight,
+  wt_gain_squared = wt_gain^2
+)
+#create a new variable and immediately refer to (or change) it
+#multilines一行写不下 ---> 转行
+```
+
+```{r}
+mutate(pups_data, pivot_minus7 = pd_pivot - 7)
+mutate(pups_data, pd_sum = pd_ears + pd_eyes + pd_pivot + pd_walk)
+
+```
+
+
+##Arrange
+
+arrange the data...
+
+```{r}
+arrange(litters_data, gd0_weight)#default increasing
+
+arrange(litters_data, desc(pups_born_alive), gd0_weight)
+```
+
+##Pipe %>%
+
+Look at intermediate object approach:
+```{r}
+litters_data_raw = read_csv("./data/FAS_litters.csv",
+  col_types = "ccddiiii")
+litters_data_clean_names = janitor::clean_names(litters_data_raw)
+litters_data_selected_cols = select(litters_data_clean_names, -pups_survive)
+litters_data_with_vars = mutate(litters_data_selected_cols, 
+  wt_gain = gd18_weight - gd0_weight,
+  group = tolower(group))
+litters_data_with_vars
+```
+
+Use nested function calls:
+
+```{r}
+litters_data_clean = 
+  mutate(
+    select(
+      janitor::clean_names(
+        read_csv("./data/FAS_litters.csv", col_types = "ccddiiii")
+        ), 
+    -pups_survive
+    ),
+  wt_gain = gd18_weight - gd0_weight,
+  group = tolower(group)
+  )
+litters_data_clean
+```
+
+Use piping -- most straightforward
+much easier to read
+
+```{r}
+litters_data = 
+  read_csv("./data/FAS_litters.csv", col_types = "ccddiiii") %>%
+  janitor::clean_names() %>%
+  select(-pups_survive) %>%
+  mutate(
+    wt_gain = gd18_weight - gd0_weight,
+    group = tolower(group)
+    ) %>% 
+  filter(!is.na(gd0_weight))
+litters_data
+
+# %>%  shift+command+'m'
+
+```
+
+Illustrate placeholder use
+.data = ., 
+
+%>% passing the dataframe as the very first argument in the ()
+if first argument is not a dataframe, use placeholder.
+
+```{r}
+
+  read_csv("./data/FAS_litters.csv", col_types = "ccddiiii") %>%
+  janitor::clean_names() %>%
+  select(-pups_survive) %>%
+  mutate(
+    wt_gain = gd18_weight - gd0_weight,
+    group = tolower(group)
+    ) %>% 
+  filter(!is.na(gd0_weight)) %>% 
+  lm(wt_gain ~ pups_born_alive, data = .) %>%
+  broom::tidy()
+# %>%  shift+command+'m'
+
+```
+
+```{r}
+pups_data = read_csv("./data/FAS_pups.csv", col_types = "ciiiii") %>% 
+  janitor::clean_names() %>% 
+  filter(sex == 1) %>% 
+  select(-pd_ears) %>% 
+  mutate(pd_greater_7 = pd_pivot > 7)
+pups_data
+```
+
 
