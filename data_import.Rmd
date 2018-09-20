@@ -26,6 +26,7 @@ litters_data = janitor::clean_names(litters_data)
 #clean up variable names--convert column names to lower snake case
 ```
 
+Never use setwd(): The project is not self-contained and portable
 Import the pups data also
 
 ```{r}
